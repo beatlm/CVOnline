@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<link rel="shortcut icon" href="img/icon.jpg" type="image/jpg;/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="http://meyerweb.com/eric/tools/css/reset/reset.css" content="text/css; charset=UTF-8"/>
+
+
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" />
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+
+ <script type="text/javascript"
+      src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBO8Zs-W-Lh6-W3hzvCb4UQx_Y89Qhf2nM&sensor=false">
+    </script>
+<script type="text/javascript">
+
+$( document ).delegate("#go", "pagebeforeshow", function() {
+if (navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(showPosition, displayError,   { enableHighAccuracy: true, timeout: 0, maximumAge: 0 } );
+ }else{
+    $('#coord').text("Lo sentimos, su navegador no soporta geolocalización.");
+  }
+})
+function displayError(error) {
+  var errors = { 
+    1: 'Permission denied',
+    2: 'Position unavailable',
+    3: 'Request timeout'
+  };
+  alert("Error: " + errors[error.code]);
+}
+
+var map;
+var registros=[];
+var contador;
+
+function showPosition(position){
+console.log(position.coords.latitude+","+position.coords.longitude);
+  $('#coord').text("Lat: " + position.coords.latitude +   " Long: " + position.coords.longitude); 
+  registros[contador]= new google.maps.LatLng(position.coords.latitude,position.coords.longitude);
+  contador++;
+    var mapOptions = {
+          center: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+          zoom: 18,
+		  zoomControl: true,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+          map = new google.maps.Map(document.getElementById("mapa"),
+            mapOptions);
+
+		var flecha = {
+			path: 'M -10 10 L 0 -10 L 10 10 L 0 2 L -10 10 z',
+			fillColor: "blue",
+			fillOpacity: 0.8,
+			scale: 1,
+			strokeColor: "gray",
+			strokeWeight: 1
+		};
+			
+		var marker = new google.maps.Marker({
+			position: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+			icon: flecha,
+			map: map
+		});
+}
+
+function showRoute(){
+
+  /*var flightPlanCoordinates = [
+    new google.maps.LatLng(40.46235859999999,  -3.8104845),
+    new google.maps.LatLng(40.462613, -3.810138),
+    new google.maps.LatLng(40.462754, -3.810130),
+	new google.maps.LatLng(40.462818, -3.809790),
+  ];*/
+  var camino = new google.maps.Polyline({
+    path: registros,
+    strokeColor: "#FF0000",
+    strokeOpacity: 0.3,
+    strokeWeight: 5
+  });
+console.log("se muestra la ruta "+registros.length);
+  camino.setMap(map);
+}
+var watch;
+function start(){
+	registros=[];
+	contador=0;
+	var timeoutVal = 5 * 100*1000;//miliseconds
+    watch=navigator.geolocation.watchPosition(showPosition, displayError,   
+	{ enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0 } );
+	$('#start').text("Stop!");
+	$("#start").attr("onclick","stop()");
+	$('#start').css('background-color','rgb(236, 153, 153)');
+}
+
+function stop(){
+navigator.geolocation.clearWatch(watch);//Dejamos de recoger datos
+showRoute();
+	$('#start').text("Start!");
+	$("#start").attr("onclick","start()");
+	$('#start').css('background-color','rgb(210, 226, 186)');
+	/* $('#start').toggleClass('stop');*/
+}
+</script>
+<style>
+.ui-content{
+background-color:#4A738F;
+}
+
+.ui-page-theme-a .ui-btn, html .ui-bar-a .ui-btn, html .ui-body-a .ui-btn, html body .ui-group-theme-a .ui-btn, html head+body .ui-btn.ui-btn-a, .ui-page-theme-a .ui-btn:visited, html .ui-bar-a .ui-btn:visited, html .ui-body-a .ui-btn:visited, html body .ui-group-theme-a .ui-btn:visited, html head+body .ui-btn.ui-btn-a:visited{
+font-size: 1.5em;
+margin-left: 3%;
+padding-top: 0.75em;
+height: 1.2em;
+width: 60%;
+border: solid #FFFFFF;
+}
+#back{
+margin-left: 2%;
+width: 1.5em;
+height: 1;
+background-color: rgb(154, 196, 202);
+}
+#create{
+background-color: rgb(210, 226, 186);
+}
+#pref{
+background-color:rgb(199, 230, 240);
+}
+#nav{
+background-color: rgb(236, 153, 153);
+}
+#start{
+background-color: rgb(210, 226, 186);
+}
+#stop{
+background-color: rgb(236, 153, 153);
+}
+
+.ui-bar-a, .ui-page-theme-a .ui-bar-inherit, html .ui-bar-a .ui-bar-inherit, html .ui-body-a .ui-bar-inherit, html body .ui-group-theme-a .ui-bar-inherit {
+background-color: #30556F;
+height:1.5em;
+padding-top:1%;
+padding-left:30%;
+color:white;
+font-size: 1.5em;
+font-family:monospace;
+}
+
+#mapa{
+
+height: 300px;
+width:380px;
+}
+</style>
+
+<title>Tracker- Sigue tus propias rutas</title>
+
+</head>
+
+<body >
+
+<!-------------------- MENU ---------------->
+<div data-role="page" id="menu">
+	 <div data-role="header">My Trekking</div>
+	<div role="main" class="ui-content">
+		<a id="create" data-role="button" data-icon="plus" data-iconpos="right" href="#create">Crear ruta</a>
+		<a id="pref"  data-role="button" data-icon="gear" data-iconpos="right" href="#config">Preferencias</a>
+		<a id="nav" data-role="button" data-icon="check" data-iconpos="right" href="#go">Navegar!</a>
+	</div>
+</div>
+<!-------------------- CREAR RUTA ---------------->
+<div data-role="page" id="create">
+	 <div data-role="header">Crear Ruta</div>
+	<div role="main" class="ui-content">
+		 
+		<a data-role="button" data-icon="check" data-iconpos="right" href="#go">Navegar!</a>
+	</div>
+	<div data-role="footer">
+	<a id="back" href="#menu" data-role="button" data-icon="home" data-iconpos="notext"></a>
+	</div>
+</div>
+
+<!-------------------- NAVEGAR ---------------->
+<div data-role="page" id="go" onload="getLocation()">
+	 <div data-role="header">	<a id="start" data-role="button" data-icon="check" data-iconpos="right" onclick="start();">Start!</a><span id="coord"></span></div>
+	<div role="main" class="ui-content">
+	
+	  <div id="mapa" ></div>
+	</div>
+<!--	<div data-role="footer">-->
+
+	<a id="back" href="#menu" data-role="button" data-icon="home" data-iconpos="notext"></a>
+	<!--</div>-->
+</div>
+
+<!-------------------- CONFIGURACION ---------------->
+<div data-role="page" id="config">
+	 <div data-role="header">Configurar sistema</div>
+	<div role="main" class="ui-content">
+		
+
+	</div>
+	<div data-role="footer">
+	<a id="back" href="#menu" data-role="button" data-icon="home" data-iconpos="notext"></a>
+	</div>
+</div>
+    
+</body>
+</html>

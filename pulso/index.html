@@ -1,0 +1,244 @@
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>Pulsómetro</title>
+ 
+	<link rel="apple-touch-icon" href="../favicon.ico"/>
+	<link rel="stylesheet" href="http://meyerweb.com/eric/tools/css/reset/reset.css" content="text/css; charset=UTF-8"/>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" />
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	 <script src="jquery.btechco.excelexport.js"></script>
+    <script src="jquery.base64.js"></script>
+	<!--    <script src="jquery-2.0.1.min.js"></script>-->
+	<script>
+	$(document).bind('mobileinit',function(){
+		$.mobile.selectmenu.prototype.options.nativeMenu = false;	 
+		localStorage.clear();
+});</script>
+	<script src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
+	<link rel="stylesheet" href="index.css" content="text/css; charset=UTF-8"/>
+	<script>
+	google.load("visualization", "1", {packages:["corechart"]});
+	
+	function ceros(valor){
+		if(valor<=9) valor="0"+valor;
+		return valor;
+	}
+	
+	$( document ).bind('ready',function() {
+		var d= new Date();
+		$('#fech').val(d.getFullYear()+"-"+ceros(d.getMonth()+1)+"-"+ceros(d.getDate()));
+		reset();
+	});
+	
+	function mostrarDatos(){
+		console.log("dia "+day+"  actividad "+activity+"duracion "+time+" fmax "+fmax+" fmedia "+fmedia
+		+" calorias "+cal+ " grasa "+grasa);
+		
+		var r=	$.ajax({data:{"fecha":  day,"tipo":activity,"duracion":time,"fmax":fmax,"fmed":fmedia,"calorias":cal,"caloriasa":cala,"caloriasm":calm,"grasa":grasa},      
+						url:'data.php', 
+						type:"POST", async:false}).responseText;						
+		var result = JSON.parse(r);	
+
+		if(result){
+			alert("Sus datos se han almacenado correctamente");
+		}else{
+			alert("Error al guardar los datos.");
+		}
+	}
+	function reset(){
+		day="";
+		activity="";
+		fmax="";
+		fmedia="";
+		cal="";
+		cala="";
+		calm="";
+		grasa="";
+	}
+	
+
+    function drawChart() {
+		//$.mobile.changePage("#grafica");
+		
+		var r=	$.ajax( {url:'graficor.php', 
+						type:"POST", async:false}).responseText;						
+		var result = JSON.parse(r);
+		var tabla= new Array();
+		tabla[0]=['Dia','F.med','F.max'];
+		for(var i=1;i<=result.length;i++){
+			tabla[i]=[result[i-1].fecha,Number(result[i-1].fmed),Number(result[i-1].fmax)];
+		}
+        var data = google.visualization.arrayToDataTable(tabla);
+        var options = {
+          title: 'Running',
+          hAxis: {title: 'Fecha',  titleTextStyle: {color: '#333'}},
+          vAxis: {minValue: 100}
+        };
+        var chart = new google.visualization.AreaChart(document.getElementById('chart_running'));
+        chart.draw(data, options);
+		
+		//SPINNING
+		r=	$.ajax( {url:'graficos.php', 
+						type:"POST", async:false}).responseText;						
+		result = JSON.parse(r);
+		tabla= new Array();
+		tabla[0]=['Dia','F.med','F.max'];
+		for(var i=1;i<=result.length;i++){
+			tabla[i]=[result[i-1].fecha,Number(result[i-1].fmed),Number(result[i-1].fmax)];
+		}
+        data = google.visualization.arrayToDataTable(tabla);
+        options = {
+          title: 'Spinning',
+          hAxis: {title: 'Fecha',  titleTextStyle: {color: '#333'}},
+          vAxis: {minValue: 100}
+        };
+        var chart = new google.visualization.AreaChart(document.getElementById('chart_spinning'));
+        chart.draw(data, options);
+		
+		$('#chart_running').show();
+		$('#chart_spinning').show();
+      }
+	
+	function generarExcell(){
+	
+		var r=	$.ajax( {url:'getAll.php', 
+						type:"POST", async:false}).responseText;						
+		var dataobj = JSON.parse(r);
+            
+		$("#dvjson").btechco_excelexport({
+                containerid: "dvjson"
+                , datatype: $datatype.Json
+                , dataset: dataobj
+                , columns: [
+                    { headertext: "Fecha", datatype: "date", datafield: "fecha", ishidden: false }
+                    , { headertext: "Actividad", datatype: "string", datafield: "tipo", width: "100px" }
+                    , { headertext: "Duracion", datatype: "date", datafield: "duracion", ishidden: false, width: "100px" }
+					, { headertext: "F maxima", datatype: "string", datafield: "fmax", ishidden: false, width: "100px" }
+					, { headertext: "F media", datatype: "string", datafield: "fmed", ishidden: false, width: "100px" }
+					, { headertext: "Calorias", datatype: "string", datafield: "calorias", ishidden: false, width: "100px" }
+					, { headertext: "Calorias Medias", datatype: "string", datafield: "caloriasa", ishidden: false, width: "100px" }
+					, { headertext: "CaloriasMaximas/h", datatype: "string", datafield: "caloriasm", ishidden: false, width: "100px" }
+                    , { headertext: "Grasa", datatype: "decimal", datafield: "grasa", ishidden: false }
+                   ]
+            });
+
+}
+	</script>
+</head>
+
+<body>
+
+ 	
+	
+<div data-role="page" id="inicio" >
+	<div data-role="header" data-theme="b" >
+	<a  href="#pag1" onclick="activity=$('#tipo :radio:checked').val();day=$('#fech').val();" data-role="button" class="ui-btn-right" data-icon="arrow-r" data-iconpos="right">Sig  </a>
+		<h1>Pulsometro</h1>
+	</div>			
+	<div data-role="main" class="ui-content">	
+		<p class="negrita">	Bienvenid@</p>
+		<label for="fech">Selecciona la fecha y el tipo de entrenamiento</label>
+		
+		<input id="fech" type="date" name="fecha" class="center-button">
+		<fieldset data-role="controlgroup" data-type="vertical" id="tipo">
+			<input type="radio" name="radio-mini" id="radio-mini-1" value="S" checked="checked" />
+			<label for="radio-mini-1">Spinning</label>
+			<input type="radio" name="radio-mini" id="radio-mini-2" value="R"  />
+			<label for="radio-mini-2">Running</label>
+			
+
+		</fieldset>
+		<div id="chart_running" class="grafico" hidden></div>
+		<div id="chart_spinning" class="grafico" hidden></div>
+		<div id="dvjson">
+    </div>
+	</div>
+	<div data-role="footer" data-theme="b">
+		<a onclick='drawChart();' data-role="button" data-icon="gear" id="graficos" data-iconpos="left" data-theme="a" >Gráfica </a>	
+		<a onclick='generarExcell();'  data-role="button" data-icon="grid" id="excell" data-iconpos="left" data-theme="a" >Excell </a>	
+	</div>
+	</div>
+
+
+<div data-role="page" id="pag1">
+	 <div data-role="header" data-theme="b">
+		<a href="#inicio" data-role="button" data-icon="arrow-l"> Ant </a>		
+		<h1>Pulsometro</h1>
+		<a href="#pag2" data-role="button" onclick="time=$('#time').val();fmax=$('#frec').val();fmedia=$('#frecm').val();" data-icon="arrow-r" data-iconpos="right"> Sig </a>
+	</div>			
+	<div data-role="main" class="ui-content">	
+		<label for="time">Tiempo de actividad:</label>
+		<input id="time" type="time" name="fecha" step="1">
+			<label for="frecm">Frecuencia media: (bps)</label>
+		<input id="frecm" type="number" name="fecha">
+		<label for="frec">Frecuencia máxima: (bps)</label>
+		<input id="frec" max="250" type="number" name="fecha">
+	
+	</div>
+</div>
+
+
+<div data-role="page" id="pag2">
+	 <div data-role="header" data-theme="b">
+	 	<a href="#pag1" data-role="button" data-icon="arrow-l"> Ant  </a>
+		<h1>Pulsometro</h1>
+		<a href="#pag3" data-role="button" onclick="cal=$('#cal').val();calm=$('#calm').val();cala=$('#cala').val();" data-icon="arrow-r" data-iconpos="right">Sig  </a>
+	</div>	
+
+	<div data-role="main" class="ui-content">	
+		<label for="cala">Calorias Avg (h):</label>
+		<input id="cala" type="number" name="fecha"><p></p>	
+		<label for="calm">Calorias Max (h):</label>
+		<input id="calm" type="number" name="fecha"><p></p>
+		<label for="cal">Calorias totales:</label>
+		<input id="cal" type="number" name="fecha"><p></p>
+	</div>	
+</div>
+
+
+<div data-role="page" id="pag3">
+	 <div data-role="header" data-theme="b">
+		<a href="#pag2" data-role="button" data-icon="arrow-l"> Ant  </a>
+		<h1>Pulsometro</h1>
+		<a onclick="grasa=$('#slider-1').val();mostrarDatos();" data-icon="check" data-iconpos="right">Guardar datos</a>
+	</div>	
+	<div data-role="main" class="ui-content">		
+		<label for="slider-1">Grasa quemada:</label>
+		<input type="range" step="0.1" name="slider-1" id="slider-1" value="5" min="0" max="10" />		
+	<!--	<div id="chart_running" class="grafico"></div>
+		<div id="chart_spinning" class="grafico"></div>-->
+	</div>
+	<div data-role="footer" data-theme="b">
+		<a href="#inicio" data-role="button" data-icon="home" id="home" data-iconpos="notext" data-theme="a" > </a>	
+	
+	  </div>
+	
+	
+</div>
+
+
+
+
+<div data-role="page" id="grafica">
+	 <div data-role="header" data-theme="b">
+		
+		<h1>Pulsometro</h1>
+	</div>	
+	<div data-role="main" class="ui-content">		
+		<div id="chart_running" class="grafico"></div>
+		<div id="chart_spinning" class="grafico"></div>
+	</div>
+	<div data-role="footer" data-theme="b">
+		<a href="#inicio" data-role="button" data-icon="home" id="home" data-iconpos="notext" data-theme="a" > </a>	
+		
+	  </div>
+	
+	
+</div>
+</body>
+</html>

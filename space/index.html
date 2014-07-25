@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+canvas{
+border:solid gray 4px;
+background-color:black;
+}
+button{
+width:100px;
+border:1px black solid;
+border-radius: 50px;
+background-color:gray;
+	-webkit-border-radius: 50px;
+	-moz-border-radius: 50px;
+	color:white;
+	font-weight:bold;
+	font-size:10pt;
+	font-family:'Arial black';
+	margin-left:150px;
+}
+
+</style>
+
+</head>
+
+<body>
+<div id="book">
+<canvas id="miCanvas" width="400" height="300"></canvas>
+
+	<!--	<label id="velText" for="vel">5</label>-->
+		<!--<input type="range" step="1"  id="vel" value="5" min="0" max="10" onchange="velocidad();"/>		-->
+		<img id="alien" src="invader.png" alt="invader" width="220" height="162" hidden>
+</div>
+<button onclick="iniciar(1);">START</button>
+<button onclick="ganar();">GANO</button>
+<button onclick="perder();">GAMEOVER</button>
+<script>
+
+/*FUNCIONES DE PRUEBA-BORRAR*/
+
+window.requestAnimFrame = (function(callback) {
+        return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+        function(callback) {
+          window.setTimeout(callback, 1000 / 60);
+        };
+      })();
+	   
+	  
+function dibujarLetras(letrero, context) {
+	c.font = "bold 31px Impact";
+	c.fillStyle='white';
+	c.fillText("GAME OVER", letrero.x, letrero.y);
+	c.fillText(score+" pts", letrero.x+70, letrero.y+30);
+}
+	  
+var letrero = {
+    x: 0,
+    y: 150,
+	width: 300,
+};
+
+function animate(lastTime, letrero)  {
+console.log(runAnimation);
+if(runAnimation) {
+    // update
+    var time = (new Date()).getTime();
+    var timeDiff = time - lastTime;
+
+    // pixels / second
+    var linearSpeed = 180;
+    var linearDistEachFrame = linearSpeed * timeDiff / 1000;
+    var currentX = letrero.x;
+
+    if(currentX < canvas.width - letrero.width / 2) {
+        var newX = currentX + linearDistEachFrame;
+        letrero.x = newX;
+    }else{
+		runAnimation=false;
+		letrero.x = 0;
+		letrero.y = 150;
+		return;
+	}
+    // clear
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    dibujarLetras(letrero, c);
+    // request new frame
+    requestAnimFrame(function() {
+    animate(time, letrero);
+    });
+	}	
+}
+
+
+function ganar(){
+for(var i=0;i<enemigos.length;i++){
+borrarEnemigo(0);
+}
+}
+function perder(){
+for (var j=0;j<enemigos.length;j++){
+			var a=enemigos[j];
+			a.y=a.y+240;
+		}
+bajarEnemigos();
+}
+
+/********************************/
+var canvas=document.getElementById("miCanvas");
+var c=canvas.getContext("2d");
+
+var VELOCIDAD=1500;
+var nivel=1;
+var x=200;
+var y=290;
+var tmpDisp;//Temporizador del disparo
+var dx=0;//Coordenadas del disparo
+var dy=0;
+var enemigos=new Array();
+var tmpEnem;//Temporizador enemigos
+var tmpCartel;//Temporizador cartel
+var score=-1;
+var al = document.getElementById("alien");
+var tmpRotar;
+var numRot;
+var runAnimation=false;
+
+c.fillStyle="white";//Pintamos cabecera
+c.font = "bold 31px Impact";
+c.fillText("PRESS START ", 110, 200);
+ 
+ window.onload = function() {
+c.drawImage(al, 145, 70,108,80);
+};
+
+function iniciar(nivel){
+	canvas.width=canvas.width;//Limpiamos canvas
+	c.clearRect(0, 0, canvas.width, canvas.height);
+	console.log("Limpiamos canvas");
+	clearInterval(tmpEnem);//Paramos enemigos y disparos
+	clearInterval(tmpDisp);
+	c.fillStyle="white";//Pintamos cabecera
+	c.font = "bold 11px sans-serif";
+	c.fillText("LEVEL: "+nivel, 270, 10);
+	c.fillText("SCORE: ", 335, 10);
+	if(nivel==1){
+		score=-1;
+	}else{
+		score--;//Se le suma uno al pintarlo
+	}
+	dx=0;//Posiciones iniciales disparo
+	dy=0;
+	x=190;//Posicion nave
+    y=285;
+
+	pintarNave(x,y);
+	crearEnemigos(nivel);
+	VELOCIDAD=1500-(nivel*500);
+	//alert(VELOCIDAD);
+	tmpEnem=setInterval(bajarEnemigos,VELOCIDAD);
+	pintarEnemigos();
+	
+	pintarScore();
+}
+function pintarNave(x,y){
+	c.fillStyle="light-gray";
+	c.fillRect(x+8,y, 4, 4);//Dibujamos la nave
+	c.fillRect(x+4,y+4, 12, 4);//Dibujamos la nave
+	c.fillRect(x,y+8, 20, 4);//Dibujamos la nave
+
+}
+function velocidad(){
+ 
+document.getElementById('velText').innerHTML=document.getElementById("vel").value;
+ 
+//document.getElementById("vel").value;
+VELOCIDAD=document.getElementById("vel").value*100;
+}
+function pintarScore(){
+	score++;
+	c.fillStyle="black";
+	c.fillRect(380,0, 42, 22);
+	c.font = "bold 12px sans-serif";
+	c.fillStyle="white";
+	c.fillText(score, 380, 10);
+}
+
+function enemigo(x,y){
+	this.x=x;
+	this.y=y;
+}
+
+function crearEnemigos(nivel){
+//Creamos el array de enemigos, en funcion del nivel
+var j=0;
+switch(nivel){
+
+case 1:
+	for(var x=110;j<5;x=x+40){
+		var a=new enemigo(x,20);
+		enemigos[j]=a;
+		j++;
+	}
+	break;
+case 2:
+	for(var x=5;j<10;x=x+40){
+		var a=new enemigo(x,20);
+		enemigos[j]=a;
+		j++;
+	}
+	break;
+
+	}
+}
+function bajarEnemigos(){
+	borrarEnemigos();
+	if(enemigos[0].y<240){//Siguen los enemigos en la pantalla
+		for (var j=0;j<enemigos.length;j++){
+			var a=enemigos[j];
+			a.y=a.y+10;
+		}
+		pintarEnemigos();
+	}else{ //Ya estan todos los enemigos abajo
+		clearInterval(tmpEnem);
+		if(enemigos.length>0){
+			gameOver();
+		}
+	}
+}
+function gameOver(){
+	dibujarLetras(letrero, c);
+	var date = new Date();
+    var time = date.getTime();
+	runAnimation=true;
+    animate(time, letrero);
+}
+//function rotar(){
+
+
+
+
+/*c.fillStyle='black';
+	c.fillRect(0,0,400,300);
+console.log("entra "+numRot);
+if(numRot<30){
+	
+ 
+	c.scale(1.1,1.1);
+	c.fillStyle='white';
+	c.fillText("GAME OVER", 100, 120);
+	numRot++;
+	console.log(numRot);	
+	}else{
+	console.log("clear");
+	clearInterval(tmpRotar);//Paramos la rotacion
+	}*/
+
+//}
+function mostrarCartel(texto1,texto2){
+	/*var my_gradient = c.createLinearGradient(0, 0, 0, 260);
+	my_gradient.addColorStop(1, "rgb(20, 78, 111)");
+	my_gradient.addColorStop(0, "white");*/
+	c.fillStyle='black';
+	c.fillRect(0,20,400,300);
+	c.fillStyle="white";
+	c.font = "bold 31px Impact";
+	c.fillText(texto1, 100, 120);
+	c.fillText(texto2, 190, 180);
+}
+
+function borrarEnemigos(){
+	for (var j=0;j<enemigos.length;j++){
+		var a=enemigos[j];
+	//	console.log("Borra en "+a.x+","+a.y);
+		c.fillStyle = "black";	
+		c.fillRect(a.x,a.y,30,30);
+	}
+}
+	
+function pintarEnemigos(){
+	
+	for(var k=0;k<enemigos.length;k++){
+		var tmp=enemigos[k];
+		//c.fillStyle='green';
+		c.drawImage(al, tmp.x, tmp.y,27,20);
+	}
+}
+
+
+function mover(dcha){
+//Comprobamos los limites de la pantalla
+	console.log(x+" , "+y);
+		if(dcha && x>5 ){
+			c.clearRect(x,y,20,12);//Borramos la nave anterior
+			c.fillStyle='white';
+			x-=8;
+			pintarNave(x,y);
+		}else if(x<375){
+			c.clearRect(x,y,20,12);//Borramos la nave anterior
+			c.fillStyle='white';
+			x+=8;
+			pintarNave(x,y);
+		}
+}
+
+function disparar(){
+	if(dx==0 && dy==0){//Disparamos si no hay ya un disparo
+		c.fillStyle='red';
+		dx=x+8;
+		dy=y-4;
+		c.fillRect(dx,dy, 4, 4);
+		tmpDisp=setInterval(avanzarDisp,7);
+	}
+}
+
+function comprobarColision(xx,yy){
+//console.log("disparo "+xx+","+yy);
+	for(var i=0;i<enemigos.length;i++){
+		var e=enemigos[i];
+		if((e.x<xx+4)&&(xx<e.x+27)){
+			//console.log("colision X");
+			if(yy<e.y+20){
+				return i;//Devolvemos el enemigo derrotado
+			}
+		}
+	}
+	return -1;
+}
+
+function borrarEnemigo(e){
+//alert("eliminado "+e);
+	var a=enemigos[e];
+	c.clearRect(a.x,a.y,30,30);//Borramos enemigo
+	c.clearRect(dx-2,dy-2,8,8);//Borramos disparo
+	enemigos.splice(e,1);//Eliminamos enemigo de la lista
+	//Comprobamos si hay más enemigos
+	if(enemigos.length==0){
+		nivel++;
+		mostrarCartel("**NEXT LEVEL**" ,nivel,true);
+		setTimeout('iniciar(nivel)',2000);
+	}
+}
+function avanzarDisp(){
+//Si colisiona, se borra y sumamos puntos
+var derrotado=comprobarColision(dx,dy);
+ 
+	if(derrotado>-1){
+		clearInterval(tmpDisp);//Paramos el disparo
+		dx=0;
+		dy=0;
+		borrarEnemigo(derrotado);
+		pintarScore();	
+	}else{
+		c.clearRect(dx, dy, 4, 4);//Borramos el disparo anterior
+		dy=dy-5;
+		if(dy>20){
+			c.fillStyle='red';
+			c.fillRect(dx,dy, 4, 4);
+		}else{//Si sale de la pantalla inicializamos el disparo
+			clearInterval(tmpDisp);
+			dx=0;
+			dy=0;
+		}
+	}
+}
+window.onkeydown = function(evento) {
+//alert(evento.keyCode);
+	switch(evento.keyCode){
+		case 37:
+			mover(true);
+			break;
+		case 39:
+			mover(false);
+			break;
+		case 38:
+			disparar();
+			break;
+		case 40:
+			bajarEnemigos();
+			break;
+	}
+}
+
+</script>
+</body>
+</html>
