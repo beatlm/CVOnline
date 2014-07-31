@@ -59,6 +59,11 @@ console.log("show:"+id);
 			$('#android1').show("slide");
 			$('#tmp').text(' > London Tour');
 		break;
+				case(22):
+			$("#contentA").show();
+			$('#android2').show("slide");
+			$('#tmp').text(' > London Tour');
+		break;
 	   case(3):
 	    $("#contentF").show();
 	   $('#prevF').show("size");
